@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motores LS Vortec</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --bg:#0b0f14; --card:#121820; --accent:#e63946; --accent2:#48cae4;
+    --text:#f1f5f9; --muted:#94a3b8; --line:#1e293b;
+  }
+  html,body{ height:100%; }
+  body{
+    font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); overflow:hidden;
+  }
+  .deck{ position:relative; width:100vw; height:100vh; }
+  .slide{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; padding:6vh 8vw;
+    opacity:0; transform:translateX(40px); pointer-events:none;
+    transition:opacity .5s ease, transform .5s ease;
+  }
+  .slide.active{ opacity:1; transform:translateX(0); pointer-events:auto; }
+  .tag{
+    display:inline-block; color:var(--accent2); letter-spacing:.25em;
+    font-size:.8rem; text-transform:uppercase; margin-bottom:1rem;
+  }
+  h1{ font-size:clamp(2.2rem,6vw,5rem); line-height:1.05; font-weight:800; }
+  h1 .hl{ color:var(--accent); }
+  h2{ font-size:clamp(1.8rem,4.5vw,3.5rem); font-weight:800; }
+  .engine-code{ color:var(--accent2); font-weight:600; font-size:clamp(1rem,2vw,1.5rem); }
+  .lead{ color:var(--muted); font-size:clamp(1rem,2vw,1.4rem); max-width:60ch; margin-top:1.2rem; line-height:1.5; }
+  .cover-info{ margin-top:2.5rem; border-left:4px solid var(--accent); padding-left:1.5rem; }
+  .cover-info p{ margin:.35rem 0; font-size:clamp(.95rem,1.8vw,1.25rem); }
+  .cover-info span{ color:var(--muted); }
+  .big-num{
+    font-size:clamp(4rem,16vw,12rem); font-weight:900; line-height:.9;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .row{ display:flex; align-items:center; gap:3vw; flex-wrap:wrap; }
+  .col-text{ flex:1 1 320px; min-width:280px; }
+  .chips{ display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1.4rem; }
+  .chip{ background:var(--card); border:1px solid var(--line); padding:.5rem 1rem; border-radius:999px; font-size:.95rem; }
+  .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-top:2rem; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1.6rem; }
+  .card .num{ font-size:2.2rem; font-weight:900; color:var(--accent); }
+  .card p{ color:var(--muted); margin-top:.5rem; font-size:.95rem; }
+  @media(max-width:720px){ .cards{ grid-template-columns:1fr; } }
+
+  /* ===== Marcadores de posicion para IMAGENES ===== */
+  /* Para poner tu imagen: reemplaza el bloque .img-ph por:
+     <img src="ruta-o-URL-de-tu-imagen.jpg" class="slide-img" alt="..."> */
+  .img-ph{
+    flex:1 1 340px; min-width:260px; min-height:260px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:.6rem;
+    background:repeating-linear-gradient(45deg,#141b24,#141b24 12px,#111721 12px,#111721 24px);
+    border:2px dashed var(--line); border-radius:16px; color:var(--muted);
+  }
+  .img-ph .ico{ font-size:2.6rem; }
+  .img-ph small{ font-size:.8rem; opacity:.8; }
+  .slide-img{ flex:1 1 340px; min-width:260px; max-height:60vh;
+    object-fit:cover; border-radius:16px; border:1px solid var(--line); }
+  .img-ph.wide{ width:100%; min-height:180px; margin-top:1.8rem; }
+  .img-strip{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem; margin-top:1.6rem; }
+  .img-strip .img-ph{ min-height:150px; }
+
+  /* nav */
+  .nav{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:center; gap:1rem; z-index:10; }
+  .nav button{
+    background:var(--card); color:var(--text); border:1px solid var(--line);
+    width:44px; height:44px; border-radius:50%; font-size:1.2rem; cursor:pointer;
+    transition:.2s;
+  }
+  .nav button:hover{ border-color:var(--accent); color:var(--accent); }
+  .counter{ color:var(--muted); font-size:.95rem; min-width:52px; text-align:center; }
+  .dots{ position:fixed; top:24px; right:28px; display:flex; gap:.5rem; z-index:10; }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; }
+  .dot.active{ background:var(--accent); transform:scale(1.3); }
+  .hint{ position:fixed; bottom:26px; right:28px; color:var(--muted); font-size:.8rem; z-index:10; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1. Portada -->
+  <section class="slide active">
+    <div class="row">
+      <div class="col-text">
+        <h1>Motores <span class="hl">LS Vortec</span></h1>
+        <div class="cover-info">
+          <p><span>Alumno:</span> Erick David Delgadillo Romo</p>
+          <p><span>Materia:</span> Comunicacion y Habilidades Digitales</p>
+          <p><span>Carrera:</span> Ingenieria en Mecatronica</p>
+        </div>
+      </div>
+      <!-- APARTADO PARA IMAGEN (portada) -->
+      <div class="img-ph">
+    <img src="5.3L turbo.jpg" class="slide-img" alt="5.3L turbo">
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 4.8L -->
+  <section class="slide">
+    <div class="row">
+      <div class="col-text">
+        <div class="big-num">4.8L</div>
+        <span class="engine-code">LR4 / LY2</span>
+        <h2>Resistente y economico</h2>
+        <p class="lead">Bloque pequeno de hierro muy resistente. Comun en camionetas de trabajo.</p>
+        <div class="chips">
+          <span class="chip">Hierro</span>
+          <span class="chip">Economico</span>
+          <span class="chip">Trabajo pesado</span>
+        </div>
+      </div>
+      <!-- APARTADO PARA IMAGEN (motor 4.8L) -->
+      <div class="img-ph">
+        <img src="4.8L.jpg" class="slide-img" alt="Motor 4.8L">
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 5.3L -->
+  <section class="slide">
+    <div class="row">
+      <div class="col-text">
+        <div class="big-num">5.3L</div>
+        <span class="engine-code">LM7 / L33 / LC9</span>
+        <h2>El caballo de batalla de GM</h2>
+        <p class="lead">Sumamente fiable y economico. El mas buscado para adaptaciones (swaps).</p>
+        <div class="chips">
+          <span class="chip">Fiable</span>
+          <span class="chip">Popular</span>
+          <span class="chip">Ideal para swaps</span>
+        </div>
+      </div>
+      <!-- APARTADO PARA IMAGEN (motor 5.3L) -->
+      <div class="img-ph">
+        <img src="5.3L.jpg" class="slide-img" alt="Motor 5.3L">
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 6.0L -->
+  <section class="slide">
+    <div class="row">
+      <div class="col-text">
+        <div class="big-num">6.0L</div>
+        <span class="engine-code">LQ4 / LQ9</span>
+        <h2>Leyenda de la potencia</h2>
+        <p class="lead">Bloques de hierro que soportan altas potencias con turbo... sin abrir el motor.</p>
+        <div class="chips">
+          <span class="chip">Alta potencia</span>
+          <span class="chip">Turbo-friendly</span>
+          <span class="chip">Legendario</span>
+        </div>
+      </div>
+      <!-- APARTADO PARA IMAGEN (motor 6.0L) -->
+      <div class="img-ph">
+        <div class="ico"></div>
+        <img src="6.0L.jpg" class="slide-img" alt="Motor 6.0L">
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Cierre / comparacion -->
+  <section class="slide">
+    <span class="tag">Resumen</span>
+    <h2>Tres bloques, una familia</h2>
+    <div class="cards">
+      <div class="card"><div class="num">4.8L</div><p>Duro y barato para trabajo.</p></div>
+      <div class="card"><div class="num">5.3L</div><p>El favorito para swaps.</p></div>
+      <div class="card"><div class="num">6.0L</div><p>Rey de la potencia con turbo.</p></div>
+    </div>
+    <!-- APARTADOS PARA IMAGENES (comparativa) -->
+    <div class="img-strip">
+      <img src="4.8L.jpg" class="slide-img" alt="Motor 4.8L">
+      <img src="5.3L.jpg" class="slide-img" alt="Motor 5.3L">
+      <img src="6.0L.jpg" class="slide-img" alt="Motor 6.0L">
+    </div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button id="prev" aria-label="Anterior">‹</button>
+  <span class="counter" id="counter">1 / 5</span>
+  <button id="next" aria-label="Siguiente">›</button>
+</div>
+<div class="hint">Usa ← → o haz clic</div>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var total = slides.length, i = 0;
+  var counter = document.getElementById('counter');
+  var dotsWrap = document.getElementById('dots');
+
+  slides.forEach(function(_, idx){
+    var d = document.createElement('div');
+    d.className = 'dot' + (idx===0 ? ' active' : '');
+    d.addEventListener('click', function(){ go(idx); });
+    dotsWrap.appendChild(d);
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  function go(n){
+    i = (n + total) % total;
+    slides.forEach(function(s, idx){ s.classList.toggle('active', idx===i); });
+    dots.forEach(function(d, idx){ d.classList.toggle('active', idx===i); });
+    counter.textContent = (i+1) + ' / ' + total;
+  }
+
+  document.getElementById('next').addEventListener('click', function(){ go(i+1); });
+  document.getElementById('prev').addEventListener('click', function(){ go(i-1); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === ' ') go(i+1);
+    if(e.key === 'ArrowLeft') go(i-1);
+  });
+})();
+</script>
+</body>
+</html>
